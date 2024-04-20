@@ -1,0 +1,3 @@
+Hello all,
+
+I'm new to Zephyr but a few years experience with embedded Linux. I'm working trying to get the touch peripheral working on teh ESP32 but its breaking at linking stage.
