@@ -1,0 +1,30 @@
+# SPDX-FileCopyrightText: Copyright The Zephyr Project Contributors
+# SPDX-License-Identifier: Apache-2.0
+
+description: |
+  Rockchip RK3568 SPI controller, the RK3066 generation of the Rockchip SPI,
+  with two native chip selects & 64-entry FIFOs.
+
+  The driver switches the controller's clock to xin24m in the CRU that owns
+  the resets, so SCLK is 24 MHz divided by an even number, at most 12 MHz.
+
+compatible: "rockchip,rk3568-spi"
+
+include: [spi-controller.yaml, pinctrl-device.yaml, reset-device.yaml]
+
+properties:
+  reg:
+    required: true
+
+  interrupts:
+    required: true
+
+  pinctrl-0:
+    required: true
+
+  pinctrl-names:
+    required: true
+
+  resets:
+    required: true
+    description: The APB reset & the controller reset, in that order.

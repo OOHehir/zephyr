@@ -1,0 +1,31 @@
+/*
+ * SPDX-FileCopyrightText: Copyright The Zephyr Project Contributors
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+/* Loopback: wire J13 pin 22 (PWM5, GPIO0_C4) to J13 pin 32 (PWM7_IR, GPIO0_C6) */
+
+#include <zephyr/dt-bindings/pinctrl/rockchip-pinctrl.h>
+
+/ {
+	resources {
+		compatible = "test-gpio-basic-api";
+		out-gpios = <&gpio0 20 0>;	/* GPIO0_C4 */
+		in-gpios = <&gpio0 22 0>;	/* GPIO0_C6 */
+	};
+};
+
+&pinctrl {
+	loopback_pins: loopback-pins {
+		group0 {
+			pinmux = <RK_PINMUX(0, RK_PC4, RK_FUNC_GPIO)>,
+				 <RK_PINMUX(0, RK_PC6, RK_FUNC_GPIO)>;
+			bias-disable;
+		};
+	};
+};
+
+&gpio0 {
+	pinctrl-0 = <&loopback_pins>;
+	pinctrl-names = "default";
+};

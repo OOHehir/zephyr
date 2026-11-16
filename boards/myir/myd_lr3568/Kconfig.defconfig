@@ -1,0 +1,29 @@
+# SPDX-FileCopyrightText: Copyright The Zephyr Project Contributors
+# SPDX-License-Identifier: Apache-2.0
+
+if NETWORKING
+
+# The DWMAC takes one RX descriptor per buffer: with the 128-byte default a
+# full-size frame needs 12 of them, the RX ring starves & TCP stalls.
+configdefault NET_BUF_DATA_SIZE
+	default 1536
+
+configdefault NET_BUF_RX_COUNT
+	default 64
+
+configdefault NET_BUF_TX_COUNT
+	default 64
+
+configdefault NET_PKT_RX_COUNT
+	default 32
+
+configdefault NET_PKT_TX_COUNT
+	default 32
+
+configdefault DWMAC_NB_RX_DESCS
+	default 32
+
+configdefault DWMAC_NB_TX_DESCS
+	default 32
+
+endif # NETWORKING

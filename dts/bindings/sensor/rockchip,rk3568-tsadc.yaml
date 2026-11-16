@@ -1,0 +1,26 @@
+# SPDX-FileCopyrightText: Copyright The Zephyr Project Contributors
+# SPDX-License-Identifier: Apache-2.0
+
+description: |
+  Rockchip RK3568 TSADC: the on-die temperature sensors at the CPU (read as
+  SENSOR_CHAN_DIE_TEMP) & the GPU (SENSOR_CHAN_ROCKCHIP_TSADC_GPU).
+
+  The driver sets the TSADC clocks in the CRU that owns the resets. The
+  hardware shutdown output (TSHUT) is not used.
+
+compatible: "rockchip,rk3568-tsadc"
+
+include: [sensor-device.yaml, reset-device.yaml]
+
+properties:
+  reg:
+    required: true
+
+  resets:
+    required: true
+    description: The APB, TSADC & TSADC PHY resets, in that order.
+
+  rockchip,grf:
+    type: phandle
+    required: true
+    description: The GRF, which holds the sensor enable & analog trims.

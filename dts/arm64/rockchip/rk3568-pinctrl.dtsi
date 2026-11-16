@@ -1,0 +1,128 @@
+/*
+ * SPDX-FileCopyrightText: Copyright The Zephyr Project Contributors
+ * SPDX-License-Identifier: Apache-2.0
+ *
+ * RK3568 pin groups. Names follow Linux's rk3568-pinctrl.dtsi.
+ */
+
+&pinctrl {
+	uart4m1_xfer: uart4m1-xfer {
+		group0 {
+			/* UART4 M1: IOFUNC_SEL3 bit 14 = 1 */
+			pinmux = <RK_PINMUX_ROUTE(3, RK_PB2, 4, RK_IOFUNC_SEL3, 14, 1, 1)>, /* TX */
+				 <RK_PINMUX_ROUTE(3, RK_PB1, 4, RK_IOFUNC_SEL3, 14, 1, 1)>; /* RX */
+			bias-pull-up;
+		};
+	};
+
+	uart2m0_xfer: uart2m0-xfer {
+		group0 {
+			/* UART2 M0: IOFUNC_SEL3 bit 10 = 0 */
+			pinmux = <RK_PINMUX_ROUTE(0, RK_PD1, 1, RK_IOFUNC_SEL3, 10, 1, 0)>, /* TX */
+				 <RK_PINMUX_ROUTE(0, RK_PD0, 1, RK_IOFUNC_SEL3, 10, 1, 0)>; /* RX */
+			bias-pull-up;
+		};
+	};
+
+	i2c0_xfer: i2c0-xfer {
+		group0 {
+			pinmux = <RK_PINMUX(0, RK_PB1, 1)>, /* SCL */
+				 <RK_PINMUX(0, RK_PB2, 1)>; /* SDA */
+			bias-disable;
+		};
+	};
+
+	i2c5m0_xfer: i2c5m0-xfer {
+		group0 {
+			/* I2C5 M0: IOFUNC_SEL1 bit 4 = 0 */
+			pinmux = <RK_PINMUX_ROUTE(3, RK_PB3, 4, RK_IOFUNC_SEL1, 4, 1, 0)>, /* SCL */
+				 <RK_PINMUX_ROUTE(3, RK_PB4, 4, RK_IOFUNC_SEL1, 4, 1, 0)>; /* SDA */
+			bias-disable;
+		};
+	};
+
+	spi2m1_pins: spi2m1-pins {
+		group0 {
+			/* SPI2 M1: IOFUNC_SEL3 bit 4 = 1 */
+			pinmux = <RK_PINMUX_ROUTE(3, RK_PA0, 3, RK_IOFUNC_SEL3, 4, 1, 1)>, /* CLK */
+				 <RK_PINMUX_ROUTE(2, RK_PD6, 3, RK_IOFUNC_SEL3, 4, 1, 1)>, /* MOSI */
+				 <RK_PINMUX_ROUTE(2, RK_PD7, 3, RK_IOFUNC_SEL3, 4, 1, 1)>; /* MISO */
+			bias-disable;
+		};
+	};
+
+	spi2m1_cs0: spi2m1-cs0 {
+		group0 {
+			pinmux = <RK_PINMUX_ROUTE(2, RK_PD5, 3, RK_IOFUNC_SEL3, 4, 1, 1)>;
+			bias-disable;
+		};
+	};
+
+	pwm0m0_pins: pwm0m0-pins {
+		group0 {
+			/* PWM0 M0: PMU GRF 0x0110 bits 1:0 = 0 */
+			pinmux = <RK_PINMUX_ROUTE(0, RK_PB7, 1, RK_ROUTE_PMU_0110, 0, 2, 0)>;
+			bias-disable;
+		};
+	};
+
+	/* GMAC0 RGMII & MDIO; TX data & clock at the drive levels Linux uses */
+	gmac0_rgmii_pins: gmac0-rgmii-pins {
+		group0 {
+			pinmux = <RK_PINMUX(2, RK_PC3, 2)>, /* MDC */
+				 <RK_PINMUX(2, RK_PC4, 2)>, /* MDIO */
+				 <RK_PINMUX(2, RK_PB5, 1)>, /* TXEN */
+				 <RK_PINMUX(2, RK_PB6, 1)>, /* RXD0 */
+				 <RK_PINMUX(2, RK_PB7, 2)>, /* RXD1 */
+				 <RK_PINMUX(2, RK_PC0, 2)>, /* RXDV */
+				 <RK_PINMUX(2, RK_PA5, 2)>, /* RXCLK */
+				 <RK_PINMUX(2, RK_PA3, 2)>, /* RXD2 */
+				 <RK_PINMUX(2, RK_PA4, 2)>; /* RXD3 */
+			bias-disable;
+		};
+		group1 {
+			pinmux = <RK_PINMUX(2, RK_PB0, 2)>; /* TXCLK */
+			bias-disable;
+			drive-strength = <1>;
+		};
+		group2 {
+			pinmux = <RK_PINMUX(2, RK_PB3, 1)>, /* TXD0 */
+				 <RK_PINMUX(2, RK_PB4, 1)>, /* TXD1 */
+				 <RK_PINMUX(2, RK_PA6, 2)>, /* TXD2 */
+				 <RK_PINMUX(2, RK_PA7, 2)>; /* TXD3 */
+			bias-disable;
+			drive-strength = <2>;
+		};
+	};
+
+	/* GMAC1 M1 RGMII & MDIO: function 3, IOFUNC_SEL0 bit 8 = 1 */
+#define RK_GMAC1M1_PIN(bank, pin) RK_PINMUX_ROUTE(bank, pin, 3, RK_IOFUNC_SEL0, 8, 1, 1)
+	gmac1m1_rgmii_pins: gmac1m1-rgmii-pins {
+		group0 {
+			pinmux = <RK_GMAC1M1_PIN(4, RK_PB6)>, /* MDC */
+				 <RK_GMAC1M1_PIN(4, RK_PB7)>, /* MDIO */
+				 <RK_GMAC1M1_PIN(4, RK_PA6)>, /* TXEN */
+				 <RK_GMAC1M1_PIN(4, RK_PA7)>, /* RXD0 */
+				 <RK_GMAC1M1_PIN(4, RK_PB0)>, /* RXD1 */
+				 <RK_GMAC1M1_PIN(4, RK_PB1)>, /* RXDV */
+				 <RK_GMAC1M1_PIN(4, RK_PA3)>, /* RXCLK */
+				 <RK_GMAC1M1_PIN(4, RK_PA1)>, /* RXD2 */
+				 <RK_GMAC1M1_PIN(4, RK_PA2)>; /* RXD3 */
+			bias-disable;
+		};
+		group1 {
+			pinmux = <RK_GMAC1M1_PIN(4, RK_PA0)>; /* TXCLK */
+			bias-disable;
+			drive-strength = <1>;
+		};
+		group2 {
+			pinmux = <RK_GMAC1M1_PIN(4, RK_PA4)>, /* TXD0 */
+				 <RK_GMAC1M1_PIN(4, RK_PA5)>, /* TXD1 */
+				 <RK_GMAC1M1_PIN(3, RK_PD6)>, /* TXD2 */
+				 <RK_GMAC1M1_PIN(3, RK_PD7)>; /* TXD3 */
+			bias-disable;
+			drive-strength = <2>;
+		};
+	};
+#undef RK_GMAC1M1_PIN
+};

@@ -1,0 +1,13 @@
+/*
+ * SPDX-FileCopyrightText: Copyright The Zephyr Project Contributors
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+/* Loopback: wire J13 pin 11 (UART4_TX_M1) to J13 pin 13 (UART4_RX_M1) */
+
+dut: &uart4 {
+	pinctrl-0 = <&uart4m1_xfer>;
+	pinctrl-names = "default";
+	current-speed = <115200>;
+	status = "okay";
+};

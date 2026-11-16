@@ -1,0 +1,21 @@
+# SPDX-FileCopyrightText: Copyright The Zephyr Project Contributors
+# SPDX-License-Identifier: Apache-2.0
+
+description: |
+  Rockchip RK3568 clock & reset unit (CRU), as a reset controller for its
+  soft resets. Reset ids are those of Linux, in
+  zephyr/dt-bindings/reset/rockchip-rk3568-reset.h.
+
+compatible: "rockchip,rk3568-cru"
+
+include: [base.yaml, reset-controller.yaml]
+
+properties:
+  reg:
+    required: true
+
+  "#reset-cells":
+    const: 1
+
+reset-cells:
+  - id

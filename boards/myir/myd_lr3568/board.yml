@@ -1,0 +1,8 @@
+board:
+  name: myd_lr3568
+  full_name: MYiR MYD-LR3568
+  vendor: myir
+  socs:
+  - name: rk3568
+    variants:
+    - name: smp

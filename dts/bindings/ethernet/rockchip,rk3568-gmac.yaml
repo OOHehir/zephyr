@@ -1,0 +1,44 @@
+# SPDX-FileCopyrightText: Copyright The Zephyr Project Contributors
+# SPDX-License-Identifier: Apache-2.0
+
+description: |
+  Rockchip RK3568 GMAC, a Synopsys DesignWare Ethernet QoS MAC, in RGMII mode
+  with the clock delays in the MAC (phy-connection-type "rgmii").
+
+compatible: "rockchip,rk3568-gmac"
+
+include: ["snps,dwmac.yaml", pinctrl-device.yaml, reset-device.yaml]
+
+properties:
+  reg:
+    required: true
+
+  interrupts:
+    required: true
+
+  resets:
+    required: true
+
+  pinctrl-0:
+    required: true
+
+  pinctrl-names:
+    required: true
+
+  phy-connection-type:
+    required: true
+
+  rockchip,grf:
+    type: phandle
+    required: true
+    description: General register files, which hold the RGMII mode & delays.
+
+  tx-delay:
+    type: int
+    default: 0x30
+    description: TX clock delay line setting (0 turns the delay line off).
+
+  rx-delay:
+    type: int
+    default: 0x10
+    description: RX clock delay line setting (0 turns the delay line off).

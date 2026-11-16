@@ -1,0 +1,11 @@
+# SPDX-FileCopyrightText: Copyright The Zephyr Project Contributors
+# SPDX-License-Identifier: Apache-2.0
+
+config I2C_ROCKCHIP
+	bool "Rockchip I2C controller driver"
+	default y
+	depends on DT_HAS_ROCKCHIP_RK3568_I2C_ENABLED
+	select PINCTRL
+	help
+	  Enable the polled driver for the I2C controller of Rockchip RK3568
+	  & related SoCs.

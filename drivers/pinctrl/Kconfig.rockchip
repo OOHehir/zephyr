@@ -1,0 +1,10 @@
+# SPDX-FileCopyrightText: Copyright The Zephyr Project Contributors
+# SPDX-License-Identifier: Apache-2.0
+
+config PINCTRL_ROCKCHIP
+	bool "Rockchip RK3568 pin controller driver"
+	default y
+	depends on DT_HAS_ROCKCHIP_RK3568_PINCTRL_ENABLED
+	help
+	  Enable the pin controller driver for the Rockchip RK3568: IOMUX, pull
+	  & drive strength.

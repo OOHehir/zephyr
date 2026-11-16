@@ -1,0 +1,222 @@
+/*
+ * SPDX-FileCopyrightText: Copyright The Zephyr Project Contributors
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+/dts-v1/;
+
+#include <arm64/rockchip/rk3568.dtsi>
+#include <common/mem.h>
+#include <zephyr/dt-bindings/gpio/gpio.h>
+#include <zephyr/dt-bindings/i2c/i2c.h>
+#include <zephyr/dt-bindings/input/input-event-codes.h>
+#include <zephyr/dt-bindings/pwm/pwm.h>
+
+/ {
+	model = "MYiR MYD-LR3568";
+	compatible = "myir,myd-lr3568", "rockchip,rk3568";
+
+	chosen {
+		zephyr,console = &uart2;
+		zephyr,shell-uart = &uart2;
+		zephyr,sram = &sram0;
+	};
+
+	aliases {
+		led0 = &run_led;
+		pwm-led0 = &user_led;
+		sw0 = &user_key;
+		watchdog0 = &wdt;
+		rtc = &rtc;
+		die-temp0 = &tsadc;
+	};
+
+	leds {
+		compatible = "gpio-leds";
+
+		/* D23, green, also on J14 pin 31 */
+		run_led: led-run {
+			gpios = <&gpio0 23 GPIO_ACTIVE_LOW>;	/* GPIO0_C7 */
+			label = "Run LED";
+		};
+	};
+
+	pwmleds {
+		compatible = "pwm-leds";
+
+		/* D24, red, also on J14 pin 32: GPIO0_B7, driven by PWM0 M0 */
+		user_led: led-user {
+			pwms = <&pwm0 0 PWM_MSEC(20) PWM_POLARITY_INVERTED>;
+			label = "User LED";
+		};
+	};
+
+	gpio_keys {
+		compatible = "gpio-keys";
+
+		/* J14 pin 34, 10 kOhm pull-up on the board: short to GND to press */
+		user_key: key-user {
+			gpios = <&gpio3 28 GPIO_ACTIVE_LOW>;	/* GPIO3_D4 */
+			label = "User key";
+			zephyr,code = <INPUT_KEY_HOME>;
+		};
+	};
+
+	firmware {
+		/* SCMI clock protocol, provided by TF-A BL31 */
+		scmi {
+			compatible = "arm,scmi-smc";
+			arm,smc-id = <0x82000010>;
+			shmem = <&scmi_shmem>;
+			#address-cells = <1>;
+			#size-cells = <0>;
+
+			scmi_clk: protocol@14 {
+				compatible = "arm,scmi-clock";
+				reg = <0x14>;
+				#clock-cells = <1>;
+			};
+		};
+	};
+
+	scmi_shmem: sram@10f000 {
+		compatible = "arm,scmi-shmem";
+		reg = <0x10f000 DT_SIZE_K(4)>;
+	};
+
+	sram0: memory@40000000 {
+		device_type = "memory";
+		compatible = "mmio-sram";
+		reg = <0x40000000 DT_SIZE_M(256)>;
+	};
+};
+
+&pinctrl {
+	/* GPIO3_D4 resets with the SoC pull-down on, fighting the 10 kOhm pull-up */
+	user_key_pins: user-key-pins {
+		group0 {
+			pinmux = <RK_PINMUX(3, RK_PD4, RK_FUNC_GPIO)>;
+			bias-pull-up;
+		};
+	};
+};
+
+&uart2 {
+	pinctrl-0 = <&uart2m0_xfer>;
+	pinctrl-names = "default";
+	status = "okay";
+	current-speed = <1500000>;
+};
+
+&gpio0 {
+	status = "okay";
+};
+
+&gpio3 {
+	pinctrl-0 = <&user_key_pins>;
+	pinctrl-names = "default";
+	status = "okay";
+};
+
+&wdt {
+	status = "okay";
+};
+
+&pwm0 {
+	pinctrl-0 = <&pwm0m0_pins>;
+	pinctrl-names = "default";
+	status = "okay";
+};
+
+&i2c5 {
+	pinctrl-0 = <&i2c5m0_xfer>;
+	pinctrl-names = "default";
+	clock-frequency = <I2C_BITRATE_STANDARD>;
+	status = "okay";
+
+	/* On the core module: the board's part & serial numbers. Never written. */
+	id_eeprom: eeprom@50 {
+		compatible = "atmel,at24";
+		reg = <0x50>;
+		size = <DT_SIZE_K(4)>;
+		pagesize = <32>;
+		address-width = <16>;
+		timeout = <5>;
+		read-only;
+	};
+
+	/* U12, LK8563T: register compatible with the PCF8563 */
+	rtc: rtc@51 {
+		compatible = "nxp,pcf8563";
+		reg = <0x51>;
+	};
+};
+
+/* SPI2 M1 on J13: MOSI pin 19, MISO pin 21, SCLK pin 23, CS0 pin 24 */
+&spi2 {
+	pinctrl-0 = <&spi2m1_pins &spi2m1_cs0>;
+	pinctrl-names = "default";
+	status = "okay";
+};
+
+&tsadc {
+	status = "okay";
+};
+
+/*
+ * Channel 0: the S2 & S5 key ladder (S2 ~447 mV, S5 ~17 mV, released 1.8 V).
+ * Channels 1 & 2: J14 pins 35 & 36. The reference is VCCA_1V8.
+ */
+&saradc {
+	vref-mv = <1800>;
+	status = "okay";
+};
+
+/*
+ * ETH1: GMAC0 to a YT8531 strapped to MDIO address 5. ETH2's PHY reset line
+ * (GPIO1_A4) is powered from VCCIO1, i.e. RK809 LDO4, which the boot loader
+ * turns on. The MAC addresses are locally administered placeholders: the
+ * board stores none (its ID EEPROM holds only the part & serial numbers).
+ */
+&gmac0 {
+	pinctrl-0 = <&gmac0_rgmii_pins>;
+	pinctrl-names = "default";
+	phy-handle = <&eth1_phy>;
+	phy-connection-type = "rgmii";
+	local-mac-address = [02 00 00 35 68 01];
+	tx-delay = <0x27>;
+	rx-delay = <0x31>;
+	status = "okay";
+};
+
+&gmac0_mdio {
+	eth1_phy: ethernet-phy@5 {
+		compatible = "motorcomm,yt8531";
+		reg = <5>;
+		reset-gpios = <&gpio3 17 GPIO_ACTIVE_LOW>;	/* GPIO3_C1 */
+	};
+};
+
+/* ETH2: GMAC1 (M1 pins) to a YT8531 strapped to MDIO address 6 */
+&gmac1 {
+	pinctrl-0 = <&gmac1m1_rgmii_pins>;
+	pinctrl-names = "default";
+	phy-handle = <&eth2_phy>;
+	phy-connection-type = "rgmii";
+	local-mac-address = [02 00 00 35 68 02];
+	tx-delay = <0x29>;
+	rx-delay = <0x24>;
+	status = "okay";
+};
+
+&gmac1_mdio {
+	eth2_phy: ethernet-phy@6 {
+		compatible = "motorcomm,yt8531";
+		reg = <6>;
+		reset-gpios = <&gpio1 4 GPIO_ACTIVE_LOW>;	/* GPIO1_A4 */
+	};
+};
+
+&gpio1 {
+	status = "okay";
+};

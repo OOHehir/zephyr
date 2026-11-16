@@ -1,0 +1,12 @@
+/*
+ * SPDX-FileCopyrightText: Copyright The Zephyr Project Contributors
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+/* PWM0 M0 drives the red user LED (D24) */
+
+/ {
+	aliases {
+		pwm-test = &pwm0;
+	};
+};

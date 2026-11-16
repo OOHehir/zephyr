@@ -1,0 +1,27 @@
+# SPDX-FileCopyrightText: Copyright The Zephyr Project Contributors
+# SPDX-License-Identifier: Apache-2.0
+
+description: |
+  Rockchip GPIO controller, version 2 (RK356x, RK3588).
+
+  Each bank has 32 pins, A0-D7. Pull-up/down and drive strength live in
+  the GRF, not in this controller: set them with a pinctrl-0 state, which
+  the driver applies at init.
+
+compatible: "rockchip,gpio-bank"
+
+include: [gpio-controller.yaml, base.yaml, pinctrl-device.yaml]
+
+properties:
+  reg:
+    required: true
+
+  interrupts:
+    required: true
+
+  "#gpio-cells":
+    const: 2
+
+gpio-cells:
+  - pin
+  - flags

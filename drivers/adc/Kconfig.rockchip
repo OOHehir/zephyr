@@ -1,0 +1,10 @@
+# SPDX-FileCopyrightText: Copyright The Zephyr Project Contributors
+# SPDX-License-Identifier: Apache-2.0
+
+config ADC_ROCKCHIP_SARADC
+	bool "Rockchip SARADC driver"
+	default y
+	depends on DT_HAS_ROCKCHIP_RK3568_SARADC_ENABLED
+	help
+	  Enable the driver for the 10-bit successive approximation ADC of
+	  Rockchip RK3568 & related SoCs.

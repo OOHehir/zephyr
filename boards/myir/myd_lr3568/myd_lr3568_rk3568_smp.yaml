@@ -1,0 +1,22 @@
+identifier: myd_lr3568/rk3568/smp
+name: MYiR MYD-LR3568
+type: mcu
+arch: arm64
+toolchain:
+  - zephyr
+  - cross-compile
+ram: 262144
+supported:
+  - adc
+  - gpio
+  - i2c
+  - pwm
+  - rtc
+  - sensor
+  - smp
+  - spi
+  - watchdog
+testing:
+  ignore_tags:
+    - net
+    - bluetooth

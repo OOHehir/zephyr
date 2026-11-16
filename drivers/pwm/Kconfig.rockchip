@@ -1,0 +1,11 @@
+# SPDX-FileCopyrightText: Copyright The Zephyr Project Contributors
+# SPDX-License-Identifier: Apache-2.0
+
+config PWM_ROCKCHIP
+	bool "Rockchip PWM driver"
+	default y
+	depends on DT_HAS_ROCKCHIP_RK3568_PWM_ENABLED
+	select PINCTRL
+	help
+	  Enable the driver for the PWM channels of Rockchip RK3568 & related
+	  SoCs.

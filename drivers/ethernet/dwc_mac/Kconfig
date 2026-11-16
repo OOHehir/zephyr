@@ -158,6 +158,20 @@ config ETH_ROCKCHIP_DWC_ETHER_QOS
 	help
 	  This enables the Synopsys DesignWare MAC driver on Rockchip RK3588.
 
+config ETH_ROCKCHIP_RK3568_DWC_ETHER_QOS
+	bool "Driver for DWC Ethernet QoS-based Rockchip RK3568"
+	depends on SOC_RK3568
+	depends on 64BIT
+	depends on DT_HAS_ROCKCHIP_RK3568_GMAC_ENABLED
+	select ETH_DWC_ETHER_QOS_CORE
+	select GPIO
+	select PINCTRL
+	select RESET
+	default y
+	help
+	  This enables the Synopsys DesignWare MAC driver for the GMACs of the
+	  Rockchip RK3568, in RGMII mode.
+
 config ETH_DWMAC_MMU
 	bool "Synopsys DesignWare MAC driver for MMU based platforms"
 	depends on CPU_HAS_MMU

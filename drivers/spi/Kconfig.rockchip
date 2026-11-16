@@ -1,0 +1,12 @@
+# SPDX-FileCopyrightText: Copyright The Zephyr Project Contributors
+# SPDX-License-Identifier: Apache-2.0
+
+config SPI_ROCKCHIP
+	bool "Rockchip SPI controller driver"
+	default y
+	depends on DT_HAS_ROCKCHIP_RK3568_SPI_ENABLED
+	select PINCTRL
+	select RESET
+	help
+	  Enable the Rockchip RK3568 SPI controller driver (controller mode,
+	  polled).

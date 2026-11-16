@@ -7,3 +7,11 @@ config RESET_ROCKCHIP_RK3588
 	depends on DT_HAS_ROCKCHIP_RK3588_CRU_RST_ENABLED
 	help
 	  Enable reset control for the Rockchip RK3588 CRU.
+
+config RESET_ROCKCHIP_RK3568
+	bool "Rockchip RK3568 CRU reset controller"
+	default y
+	depends on DT_HAS_ROCKCHIP_RK3568_CRU_ENABLED
+	help
+	  Enable the driver for the soft resets of the Rockchip RK3568 clock &
+	  reset unit (CRU).

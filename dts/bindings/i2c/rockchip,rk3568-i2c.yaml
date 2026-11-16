@@ -1,0 +1,23 @@
+# SPDX-FileCopyrightText: Copyright The Zephyr Project Contributors
+# SPDX-License-Identifier: Apache-2.0
+
+description: |
+  Rockchip RK3568 I2C controller, the RK3399 generation of the Rockchip I2C
+  block, run as an interrupt-driven controller.
+
+compatible: "rockchip,rk3568-i2c"
+
+include: [i2c-controller.yaml, pinctrl-device.yaml]
+
+properties:
+  reg:
+    required: true
+
+  interrupts:
+    required: true
+
+  clocks:
+    required: true
+    description: |
+      Function clock, as a fixed-clock node whose clock-frequency the driver
+      divides down to the bus rate.

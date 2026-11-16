@@ -1,0 +1,11 @@
+# SPDX-FileCopyrightText: Copyright The Zephyr Project Contributors
+# SPDX-License-Identifier: Apache-2.0
+
+config ROCKCHIP_TSADC
+	bool "Rockchip TSADC temperature sensor"
+	default y
+	depends on DT_HAS_ROCKCHIP_RK3568_TSADC_ENABLED
+	select RESET
+	help
+	  Enable the Rockchip RK3568 TSADC, which measures the SoC temperature
+	  at the CPU & GPU.

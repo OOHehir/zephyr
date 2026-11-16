@@ -8,6 +8,11 @@ compatible: "motorcomm,yt8521"
 include: ethernet-phy-common.yaml
 
 properties:
+  reset-gpios:
+    type: phandle-array
+    description: |
+      GPIO wired to the PHY's RESET_N pin, usually flagged GPIO_ACTIVE_LOW.
+      The driver holds it in reset for 20 ms, then waits 100 ms.
   motorcomm,rx-delay-sel:
     type: int
     description: |

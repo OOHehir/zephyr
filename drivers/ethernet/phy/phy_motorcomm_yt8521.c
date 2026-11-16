@@ -17,6 +17,7 @@ LOG_MODULE_REGISTER(phy_motorcomm_yt85xx, CONFIG_PHY_LOG_LEVEL);
 #include <zephyr/device.h>
 #include <zephyr/init.h>
 #include <zephyr/kernel.h>
+#include <zephyr/drivers/gpio.h>
 #include <zephyr/drivers/mdio.h>
 #include <zephyr/net/phy.h>
 #include <zephyr/net/mdio.h>
@@ -26,6 +27,10 @@ LOG_MODULE_REGISTER(phy_motorcomm_yt85xx, CONFIG_PHY_LOG_LEVEL);
 
 #define PHY_ID_YT8521 (0x0000011A)
 #define PHY_ID_YT8531 (0x0000E91A)
+
+/* Hardware reset: hold RESET_N low, then wait before the first MDIO access */
+#define YTPHY_RESET_HOLD_MS   20
+#define YTPHY_RESET_SETTLE_MS 100
 
 /* PHY Specific Status Register */
 #define SPEC_STATUS_REG_DUPLEX_MASK (1U << 13)
@@ -74,6 +79,9 @@ struct mc_ytphy_config {
 	uint8_t rx_delay_sel;
 	uint8_t tx_delay_sel;
 	enum phy_link_speed default_speeds;
+#ifdef CONFIG_GPIO
+	struct gpio_dt_spec reset_gpio;
+#endif
 };
 
 struct mc_ytphy_data {
@@ -526,12 +534,47 @@ static int mc_ytphy_get_id(const struct device *dev, uint32_t *phy_id)
 	return 0;
 }
 
+static int mc_ytphy_hw_reset(const struct device *dev)
+{
+#ifdef CONFIG_GPIO
+	const struct mc_ytphy_config *const config = dev->config;
+	int ret;
+
+	if (config->reset_gpio.port == NULL) {
+		return 0;
+	}
+
+	if (!gpio_is_ready_dt(&config->reset_gpio)) {
+		return -ENODEV;
+	}
+
+	ret = gpio_pin_configure_dt(&config->reset_gpio, GPIO_OUTPUT_ACTIVE);
+	if (ret < 0) {
+		return ret;
+	}
+	k_msleep(YTPHY_RESET_HOLD_MS);
+
+	ret = gpio_pin_set_dt(&config->reset_gpio, 0);
+	if (ret < 0) {
+		return ret;
+	}
+	k_msleep(YTPHY_RESET_SETTLE_MS);
+#endif
+
+	return 0;
+}
+
 static int mc_ytphy_init(const struct device *dev)
 {
 	struct mc_ytphy_data *const data = dev->data;
 	int ret;
 
 	k_sem_init(&data->sem, 1, 1);
+
+	ret = mc_ytphy_hw_reset(dev);
+	if (ret < 0) {
+		return ret;
+	}
 
 	data->state.is_up = false;
 	data->dev = dev;
@@ -599,7 +642,8 @@ static DEVICE_API(ethphy, mc_ytphy_driver_api) = {
 		.rx_delay_sel = DT_INST_PROP_OR(n, motorcomm_rx_delay_sel, 0),                     \
 		.tx_delay_sel = DT_INST_PROP_OR(n, motorcomm_tx_delay_sel, 0),                     \
 		.default_speeds = PHY_INST_GENERATE_DEFAULT_SPEEDS(n),                             \
-	};
+		IF_ENABLED(CONFIG_GPIO,                                                            \
+			   (.reset_gpio = GPIO_DT_SPEC_INST_GET_OR(n, reset_gpios, {0}),)) };
 
 #define MC_YTPHY_DATA(n)                                                                           \
 	static struct mc_ytphy_data mc_ytphy_data_##n = {                                          \

@@ -1,0 +1,67 @@
+# SPDX-FileCopyrightText: Copyright The Zephyr Project Contributors
+# SPDX-License-Identifier: Apache-2.0
+
+description: |
+  Rockchip RK3568 pin controller.
+
+  IOMUX, pull & drive strength of the GPIO0 pins live in the PMU GRF; those of
+  GPIO1-GPIO4 in the system GRF.
+
+  Pins are grouped by state, then by shared configuration:
+
+    #include <zephyr/dt-bindings/pinctrl/rockchip-pinctrl.h>
+
+    &pinctrl {
+      uart2m0_xfer: uart2m0-xfer {
+        group0 {
+          pinmux = <RK_PINMUX(0, RK_PD0, 1)>, <RK_PINMUX(0, RK_PD1, 1)>;
+          bias-pull-up;
+        };
+      };
+    };
+
+  A property left out leaves that setting as the boot loader set it.
+
+  A peripheral with more than one pin set (M0, M1, M2) also needs its route
+  register set: encode the pins with RK_PINMUX_ROUTE(bank, pin, function,
+  register, shift, width, value), where register is RK_IOFUNC_SEL0-5 (GRF
+  0x0300-0x0314) or RK_ROUTE_PMU_0110, & shift, width & value give the
+  peripheral's field in it, from the TRM. For example, GMAC1 M1 sets bit 8 of
+  IOFUNC_SEL0:
+
+    pinmux = <RK_PINMUX_ROUTE(4, RK_PA7, 3, RK_IOFUNC_SEL0, 8, 1, 1)>;
+
+compatible: "rockchip,rk3568-pinctrl"
+
+include: base.yaml
+
+properties:
+  reg:
+    required: true
+    description: PMU GRF, then system GRF.
+
+  reg-names:
+    required: true
+
+child-binding:
+  description: Pin configuration state.
+
+  child-binding:
+    description: Pins sharing one configuration.
+
+    include:
+      - name: pincfg-node.yaml
+        property-allowlist:
+          - bias-disable
+          - bias-pull-down
+          - bias-pull-up
+          - drive-strength
+
+    properties:
+      pinmux:
+        type: array
+        required: true
+        description: |
+          Pins, each encoded with RK_PINMUX(bank, pin, function), or with
+          RK_PINMUX_ROUTE() to also select the peripheral's pin set.
+          drive-strength is a level, 0 (weakest) to 5, not milliamps.

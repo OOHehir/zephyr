@@ -1,0 +1,28 @@
+# SPDX-FileCopyrightText: Copyright The Zephyr Project Contributors
+# SPDX-License-Identifier: Apache-2.0
+
+description: |
+  Rockchip RK3568 SARADC, the RK3399 generation of the Rockchip successive
+  approximation ADC: 8 single-ended channels, 10 bits, one reference input.
+
+compatible: "rockchip,rk3568-saradc"
+
+include: adc-controller.yaml
+
+properties:
+  reg:
+    required: true
+
+  interrupts:
+    required: true
+
+  vref-mv:
+    type: int
+    required: true
+    description: Voltage on the reference input (VCCA_1V8 on RK3568 boards) in mV.
+
+  "#io-channel-cells":
+    const: 1
+
+io-channel-cells:
+  - input

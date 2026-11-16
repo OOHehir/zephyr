@@ -1,0 +1,28 @@
+# SPDX-FileCopyrightText: Copyright The Zephyr Project Contributors
+# SPDX-License-Identifier: Apache-2.0
+
+description: |
+  Rockchip RK3568 PWM channel, the RK3328 generation of the Rockchip PWM. Each
+  node is one channel of a four-channel block, so the channel cell is 0.
+
+compatible: "rockchip,rk3568-pwm"
+
+include: [pwm-controller.yaml, pinctrl-device.yaml, base.yaml]
+
+properties:
+  reg:
+    required: true
+
+  clocks:
+    required: true
+    description: |
+      Function clock, as a fixed-clock node whose clock-frequency is the
+      counter rate.
+
+  "#pwm-cells":
+    const: 3
+
+pwm-cells:
+  - channel
+  - period
+  - flags

@@ -10,12 +10,44 @@
 #include <mem.h>
 #include <arm64/armv8-a.dtsi>
 #include <zephyr/dt-bindings/interrupt-controller/arm-gic.h>
+#include <zephyr/dt-bindings/reset/rockchip-rk3568-reset.h>
+#include <zephyr/dt-bindings/pinctrl/rockchip-pinctrl.h>
 
 / {
 	compatible = "rockchip,rk3568";
 	#address-cells = <1>;
 	#size-cells = <1>;
 	interrupt-parent = <&gic>;
+
+	/*
+	 * CRU clk_i2c, the function clock of I2C1-I2C5. CLKSEL_CON71 bits 9:8
+	 * select xin24m out of reset, & no firmware in the boot chain changes it.
+	 */
+	clk_i2c: clk-i2c {
+		compatible = "fixed-clock";
+		#clock-cells = <0>;
+		clock-frequency = <24000000>;
+	};
+
+	/*
+	 * PMU CRU clk_i2c0: PPLL (200 MHz) / (CLKSEL_CON3[6:0] + 1). Not a reset
+	 * default; this is the 100 MHz mainline U-Boot sets for its PMIC bus.
+	 */
+	clk_i2c0: clk-i2c0 {
+		compatible = "fixed-clock";
+		#clock-cells = <0>;
+		clock-frequency = <100000000>;
+	};
+
+	/*
+	 * PMU CRU clk_pwm0, the function clock of PWM0: PMU_CLKSEL_CON6 selects
+	 * xin24m / (1 + 1) out of reset.
+	 */
+	clk_pwm0: clk-pwm0 {
+		compatible = "fixed-clock";
+		#clock-cells = <0>;
+		clock-frequency = <12000000>;
+	};
 
 	cpus {
 		#address-cells = <1>;
@@ -76,6 +108,218 @@
 		status = "okay";
 	};
 
+	pinctrl: pinctrl@fdc20000 {
+		compatible = "rockchip,rk3568-pinctrl";
+		reg = <0xfdc20000 0x10000>, <0xfdc60000 0x10000>;
+		reg-names = "pmu", "grf";
+	};
+
+	grf: syscon@fdc60000 {
+		compatible = "syscon";
+		reg = <0xfdc60000 0x10000>;
+	};
+
+	cru: clock-controller@fdd20000 {
+		compatible = "rockchip,rk3568-cru";
+		reg = <0xfdd20000 0x1000>;
+		#reset-cells = <1>;
+	};
+
+	i2c0: i2c@fdd40000 {
+		compatible = "rockchip,rk3568-i2c";
+		reg = <0xfdd40000 0x1000>;
+		interrupts = <GIC_SPI 46 IRQ_TYPE_LEVEL IRQ_DEFAULT_PRIORITY>;
+		clocks = <&clk_i2c0>;
+		#address-cells = <1>;
+		#size-cells = <0>;
+		status = "disabled";
+	};
+
+	gpio0: gpio@fdd60000 {
+		compatible = "rockchip,gpio-bank";
+		reg = <0xfdd60000 0x100>;
+		interrupts = <GIC_SPI 33 IRQ_TYPE_LEVEL IRQ_DEFAULT_PRIORITY>;
+		gpio-controller;
+		#gpio-cells = <2>;
+		ngpios = <32>;
+		status = "disabled";
+	};
+
+	pwm0: pwm@fdd70000 {
+		compatible = "rockchip,rk3568-pwm";
+		reg = <0xfdd70000 0x10>;
+		clocks = <&clk_pwm0>;
+		#pwm-cells = <3>;
+		status = "disabled";
+	};
+
+	pwm1: pwm@fdd70010 {
+		compatible = "rockchip,rk3568-pwm";
+		reg = <0xfdd70010 0x10>;
+		clocks = <&clk_pwm0>;
+		#pwm-cells = <3>;
+		status = "disabled";
+	};
+
+	pwm2: pwm@fdd70020 {
+		compatible = "rockchip,rk3568-pwm";
+		reg = <0xfdd70020 0x10>;
+		clocks = <&clk_pwm0>;
+		#pwm-cells = <3>;
+		status = "disabled";
+	};
+
+	pwm3: pwm@fdd70030 {
+		compatible = "rockchip,rk3568-pwm";
+		reg = <0xfdd70030 0x10>;
+		clocks = <&clk_pwm0>;
+		#pwm-cells = <3>;
+		status = "disabled";
+	};
+
+	gmac1: ethernet@fe010000 {
+		compatible = "rockchip,rk3568-gmac", "snps,dwmac";
+		reg = <0xfe010000 0x10000>;
+		interrupts = <GIC_SPI 32 IRQ_TYPE_LEVEL IRQ_DEFAULT_PRIORITY>;
+		resets = <&cru SRST_A_GMAC1>;
+		rockchip,grf = <&grf>;
+		/* MDC = CSR clock / 62, for a 100-150 MHz CSR clock (as U-Boot) */
+		snps,clk-csr = <1>;
+		status = "disabled";
+
+		gmac1_mdio: mdio {
+			compatible = "snps,dwmac-mdio";
+			#address-cells = <1>;
+			#size-cells = <0>;
+		};
+	};
+
+	gmac0: ethernet@fe2a0000 {
+		compatible = "rockchip,rk3568-gmac", "snps,dwmac";
+		reg = <0xfe2a0000 0x10000>;
+		interrupts = <GIC_SPI 27 IRQ_TYPE_LEVEL IRQ_DEFAULT_PRIORITY>;
+		resets = <&cru SRST_A_GMAC0>;
+		rockchip,grf = <&grf>;
+		/* MDC = CSR clock / 62, for a 100-150 MHz CSR clock (as U-Boot) */
+		snps,clk-csr = <1>;
+		status = "disabled";
+
+		gmac0_mdio: mdio {
+			compatible = "snps,dwmac-mdio";
+			#address-cells = <1>;
+			#size-cells = <0>;
+		};
+	};
+
+	i2c1: i2c@fe5a0000 {
+		compatible = "rockchip,rk3568-i2c";
+		reg = <0xfe5a0000 0x1000>;
+		interrupts = <GIC_SPI 47 IRQ_TYPE_LEVEL IRQ_DEFAULT_PRIORITY>;
+		clocks = <&clk_i2c>;
+		#address-cells = <1>;
+		#size-cells = <0>;
+		status = "disabled";
+	};
+
+	i2c2: i2c@fe5b0000 {
+		compatible = "rockchip,rk3568-i2c";
+		reg = <0xfe5b0000 0x1000>;
+		interrupts = <GIC_SPI 48 IRQ_TYPE_LEVEL IRQ_DEFAULT_PRIORITY>;
+		clocks = <&clk_i2c>;
+		#address-cells = <1>;
+		#size-cells = <0>;
+		status = "disabled";
+	};
+
+	i2c3: i2c@fe5c0000 {
+		compatible = "rockchip,rk3568-i2c";
+		reg = <0xfe5c0000 0x1000>;
+		interrupts = <GIC_SPI 49 IRQ_TYPE_LEVEL IRQ_DEFAULT_PRIORITY>;
+		clocks = <&clk_i2c>;
+		#address-cells = <1>;
+		#size-cells = <0>;
+		status = "disabled";
+	};
+
+	i2c4: i2c@fe5d0000 {
+		compatible = "rockchip,rk3568-i2c";
+		reg = <0xfe5d0000 0x1000>;
+		interrupts = <GIC_SPI 50 IRQ_TYPE_LEVEL IRQ_DEFAULT_PRIORITY>;
+		clocks = <&clk_i2c>;
+		#address-cells = <1>;
+		#size-cells = <0>;
+		status = "disabled";
+	};
+
+	i2c5: i2c@fe5e0000 {
+		compatible = "rockchip,rk3568-i2c";
+		reg = <0xfe5e0000 0x1000>;
+		interrupts = <GIC_SPI 51 IRQ_TYPE_LEVEL IRQ_DEFAULT_PRIORITY>;
+		clocks = <&clk_i2c>;
+		#address-cells = <1>;
+		#size-cells = <0>;
+		status = "disabled";
+	};
+
+	wdt: watchdog@fe600000 {
+		compatible = "snps,designware-watchdog";
+		reg = <0xfe600000 0x100>;
+		interrupts = <GIC_SPI 149 IRQ_TYPE_LEVEL IRQ_DEFAULT_PRIORITY>;
+		/* TCLK_WDT_NS is fed from xin24m */
+		clock-frequency = <24000000>;
+		status = "disabled";
+	};
+
+	spi0: spi@fe610000 {
+		compatible = "rockchip,rk3568-spi";
+		reg = <0xfe610000 0x1000>;
+		interrupts = <GIC_SPI 103 IRQ_TYPE_LEVEL IRQ_DEFAULT_PRIORITY>;
+		resets = <&cru SRST_P_SPI0>, <&cru SRST_SPI0>;
+		#address-cells = <1>;
+		#size-cells = <0>;
+		status = "disabled";
+	};
+
+	spi1: spi@fe620000 {
+		compatible = "rockchip,rk3568-spi";
+		reg = <0xfe620000 0x1000>;
+		interrupts = <GIC_SPI 104 IRQ_TYPE_LEVEL IRQ_DEFAULT_PRIORITY>;
+		resets = <&cru SRST_P_SPI1>, <&cru SRST_SPI1>;
+		#address-cells = <1>;
+		#size-cells = <0>;
+		status = "disabled";
+	};
+
+	spi2: spi@fe630000 {
+		compatible = "rockchip,rk3568-spi";
+		reg = <0xfe630000 0x1000>;
+		interrupts = <GIC_SPI 105 IRQ_TYPE_LEVEL IRQ_DEFAULT_PRIORITY>;
+		resets = <&cru SRST_P_SPI2>, <&cru SRST_SPI2>;
+		#address-cells = <1>;
+		#size-cells = <0>;
+		status = "disabled";
+	};
+
+	spi3: spi@fe640000 {
+		compatible = "rockchip,rk3568-spi";
+		reg = <0xfe640000 0x1000>;
+		interrupts = <GIC_SPI 106 IRQ_TYPE_LEVEL IRQ_DEFAULT_PRIORITY>;
+		resets = <&cru SRST_P_SPI3>, <&cru SRST_SPI3>;
+		#address-cells = <1>;
+		#size-cells = <0>;
+		status = "disabled";
+	};
+
+	uart1: serial@fe650000 {
+		compatible = "rockchip,rk3568-uart", "ns16550";
+		reg = <0xfe650000 0x10000>;
+		interrupts = <GIC_SPI 117 IRQ_TYPE_LEVEL IRQ_DEFAULT_PRIORITY>;
+		/* sclk_uart1: CLKSEL_CON52 selects xin24m out of reset */
+		clock-frequency = <24000000>;
+		reg-shift = <2>;
+		status = "disabled";
+	};
+
 	uart2: serial@fe660000 {
 		compatible = "rockchip,rk3568-uart", "ns16550";
 		reg = <0xfe660000 0x10000>;
@@ -84,4 +328,135 @@
 		reg-shift = <2>;
 		status = "disabled";
 	};
+
+	uart3: serial@fe670000 {
+		compatible = "rockchip,rk3568-uart", "ns16550";
+		reg = <0xfe670000 0x10000>;
+		interrupts = <GIC_SPI 119 IRQ_TYPE_LEVEL IRQ_DEFAULT_PRIORITY>;
+		/* sclk_uart3: CLKSEL_CON56 selects xin24m out of reset */
+		clock-frequency = <24000000>;
+		reg-shift = <2>;
+		status = "disabled";
+	};
+
+	uart4: serial@fe680000 {
+		compatible = "rockchip,rk3568-uart", "ns16550";
+		reg = <0xfe680000 0x10000>;
+		interrupts = <GIC_SPI 120 IRQ_TYPE_LEVEL IRQ_DEFAULT_PRIORITY>;
+		/* sclk_uart4: CLKSEL_CON58 selects xin24m out of reset */
+		clock-frequency = <24000000>;
+		reg-shift = <2>;
+		status = "disabled";
+	};
+
+	uart5: serial@fe690000 {
+		compatible = "rockchip,rk3568-uart", "ns16550";
+		reg = <0xfe690000 0x10000>;
+		interrupts = <GIC_SPI 121 IRQ_TYPE_LEVEL IRQ_DEFAULT_PRIORITY>;
+		/* sclk_uart5: CLKSEL_CON60 selects xin24m out of reset */
+		clock-frequency = <24000000>;
+		reg-shift = <2>;
+		status = "disabled";
+	};
+
+	uart6: serial@fe6a0000 {
+		compatible = "rockchip,rk3568-uart", "ns16550";
+		reg = <0xfe6a0000 0x10000>;
+		interrupts = <GIC_SPI 122 IRQ_TYPE_LEVEL IRQ_DEFAULT_PRIORITY>;
+		/* sclk_uart6: CLKSEL_CON62 selects xin24m out of reset */
+		clock-frequency = <24000000>;
+		reg-shift = <2>;
+		status = "disabled";
+	};
+
+	uart7: serial@fe6b0000 {
+		compatible = "rockchip,rk3568-uart", "ns16550";
+		reg = <0xfe6b0000 0x10000>;
+		interrupts = <GIC_SPI 123 IRQ_TYPE_LEVEL IRQ_DEFAULT_PRIORITY>;
+		/* sclk_uart7: CLKSEL_CON64 selects xin24m out of reset */
+		clock-frequency = <24000000>;
+		reg-shift = <2>;
+		status = "disabled";
+	};
+
+	uart8: serial@fe6c0000 {
+		compatible = "rockchip,rk3568-uart", "ns16550";
+		reg = <0xfe6c0000 0x10000>;
+		interrupts = <GIC_SPI 124 IRQ_TYPE_LEVEL IRQ_DEFAULT_PRIORITY>;
+		/* sclk_uart8: CLKSEL_CON66 selects xin24m out of reset */
+		clock-frequency = <24000000>;
+		reg-shift = <2>;
+		status = "disabled";
+	};
+
+	uart9: serial@fe6d0000 {
+		compatible = "rockchip,rk3568-uart", "ns16550";
+		reg = <0xfe6d0000 0x10000>;
+		interrupts = <GIC_SPI 125 IRQ_TYPE_LEVEL IRQ_DEFAULT_PRIORITY>;
+		/* sclk_uart9: CLKSEL_CON68 selects xin24m out of reset */
+		clock-frequency = <24000000>;
+		reg-shift = <2>;
+		status = "disabled";
+	};
+
+	tsadc: tsadc@fe710000 {
+		compatible = "rockchip,rk3568-tsadc";
+		reg = <0xfe710000 0x100>;
+		resets = <&cru SRST_P_TSADC>, <&cru SRST_TSADC>, <&cru SRST_TSADCPHY>;
+		rockchip,grf = <&grf>;
+		status = "disabled";
+	};
+
+	/* clk_saradc is xin24m behind a gate, with no divider */
+	saradc: adc@fe720000 {
+		compatible = "rockchip,rk3568-saradc";
+		reg = <0xfe720000 0x100>;
+		interrupts = <GIC_SPI 93 IRQ_TYPE_LEVEL IRQ_DEFAULT_PRIORITY>;
+		#io-channel-cells = <1>;
+		#address-cells = <1>;
+		#size-cells = <0>;
+		status = "disabled";
+	};
+
+	gpio1: gpio@fe740000 {
+		compatible = "rockchip,gpio-bank";
+		reg = <0xfe740000 0x100>;
+		interrupts = <GIC_SPI 34 IRQ_TYPE_LEVEL IRQ_DEFAULT_PRIORITY>;
+		gpio-controller;
+		#gpio-cells = <2>;
+		ngpios = <32>;
+		status = "disabled";
+	};
+
+	gpio2: gpio@fe750000 {
+		compatible = "rockchip,gpio-bank";
+		reg = <0xfe750000 0x100>;
+		interrupts = <GIC_SPI 35 IRQ_TYPE_LEVEL IRQ_DEFAULT_PRIORITY>;
+		gpio-controller;
+		#gpio-cells = <2>;
+		ngpios = <32>;
+		status = "disabled";
+	};
+
+	gpio3: gpio@fe760000 {
+		compatible = "rockchip,gpio-bank";
+		reg = <0xfe760000 0x100>;
+		interrupts = <GIC_SPI 36 IRQ_TYPE_LEVEL IRQ_DEFAULT_PRIORITY>;
+		gpio-controller;
+		#gpio-cells = <2>;
+		ngpios = <32>;
+		status = "disabled";
+	};
+
+	gpio4: gpio@fe770000 {
+		compatible = "rockchip,gpio-bank";
+		reg = <0xfe770000 0x100>;
+		interrupts = <GIC_SPI 37 IRQ_TYPE_LEVEL IRQ_DEFAULT_PRIORITY>;
+		gpio-controller;
+		#gpio-cells = <2>;
+		ngpios = <32>;
+		status = "disabled";
+	};
 };
+
+#include "rk3568-pinctrl.dtsi"

@@ -5,3 +5,5 @@
 #
 
 add_subdirectory(${CONFIG_SOC_SERIES})
+
+zephyr_include_directories(common)
